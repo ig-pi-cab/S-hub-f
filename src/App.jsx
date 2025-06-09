@@ -7,13 +7,14 @@ import CreateServicePage from "./pages/CreateServicePage";
 import ServiceListPage from "./pages/ServiceListPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AppLayout from "./layout/AppLayout";
-
+import OAuthSuccess from "./pages/OAuthSucess"
 function App() {
   return (
     <Routes>
       <Route path="/" element={<AuthSelectionPage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
+      <Route path="/oauth-success" element={<OAuthSuccess />} />
 
       <Route
         element={

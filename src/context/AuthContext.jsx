@@ -45,9 +45,20 @@ export function AuthProvider({ children }) {
     setToken(null);
     localStorage.clear();
   };
+  const setTokenFromOAuth = (token) => {
+  localStorage.setItem("token", token);
+  // si tienes lógica para setUser, puedes decodificarlo y setear:
+  const decoded = JSON.parse(atob(token.split(".")[1]));
+  setUser({
+    id: decoded.id,
+    roles: decoded.roles,
+    activeRole: decoded.activeRole,
+  });
+};
+
 
   return (
-    <AuthContext.Provider value={{ user, token, login, logout, switchRole }}>
+  <AuthContext.Provider value={{ user, token, login, logout, switchRole, setTokenFromOAuth }}>
       {children}
     </AuthContext.Provider>
   );

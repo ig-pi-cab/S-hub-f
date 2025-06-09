@@ -6,6 +6,8 @@ import axiosInstance from "../api/axiosInstance";
 import InputField from "../components/ui/InputField";
 import SubmitButton from "../components/ui/SubmitButton";
 import BackToSelectionButton from "../components/ui/BackToSelectionButton";
+import { registerSchema } from "../validations/authSchemas";
+import GoogleRegisterButton from "../components/ui/GoogleRegisterButton";
 
 export default function RegisterPage() {
   const { login } = useAuth();
@@ -22,49 +24,41 @@ export default function RegisterPage() {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const validateForm = () => {
-    const { name, email, password, role } = form;
-
-    if (!name.trim()) {
-      toast.error("El nombre es obligatorio");
-      return false;
+  const validateForm = (form) => {
+  try {
+    registerSchema.parse(form);
+    return []; // ← Vacío si no hay errores
+  } catch (err) {
+    if (err.errors) {
+      return err.errors.map((e) => e.message);
     }
+    return ["Error desconocido en validación"];
+  }
+};
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      toast.error("Correo inválido");
-      return false;
-    }
 
-    if (password.length < 6) {
-      toast.error("La contraseña debe tener al menos 6 caracteres");
-      return false;
-    }
-
-    if (!["provider", "client"].includes(role)) {
-      toast.error("Rol inválido");
-      return false;
-    }
-
-    return true;
-  };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!validateForm()) return;
+  if (!e.target.checkValidity()) {
+    return; // Deja que el navegador muestre los errores nativos
+  }
 
-    setLoading(true);
-    try {
-      await axiosInstance.post("/auth/register", form);
-      await login(form.email, form.password);
-      toast.success("Registro exitoso");
-      navigate("/dashboard");
-    } catch (err) {
-      toast.error(err.response?.data?.message || "Error al registrar");
-    } finally {
-      setLoading(false);
-    }
-  };
+  e.preventDefault(); // ✅ Ahora sí lo bloqueas si pasa HTML5
+  setLoading(true);
+
+  try {
+    await axiosInstance.post("/auth/register", form);
+    await login(form.email, form.password);
+    toast.success("Registro exitoso");
+    navigate("/dashboard");
+  } catch (err) {
+    toast.error(err.response?.data?.message || "Error al registrar");
+  } finally {
+    setLoading(false);
+  }
+};
+
+
 
 
   return (
@@ -73,6 +67,7 @@ export default function RegisterPage() {
         <BackToSelectionButton />
 
         <h2 className="text-xl font-semibold mb-4 text-center">Crear cuenta</h2>
+        <GoogleRegisterButton /> {/* ← Aquí se integra el botón */}
 
         <InputField name="name" type="text" value={form.name} onChange={handleChange} placeholder="Nombre" />
         <InputField
@@ -82,6 +77,7 @@ export default function RegisterPage() {
           onChange={handleChange}
           placeholder="Correo"
           autoComplete="off"
+          minLength={6}
         />
         <InputField
           name="password"
@@ -90,6 +86,7 @@ export default function RegisterPage() {
           onChange={handleChange}
           placeholder="Contraseña"
           autoComplete="new-password"
+          minLength={6}
         />
 
         <select
